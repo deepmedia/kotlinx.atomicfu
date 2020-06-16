@@ -18,6 +18,8 @@ import org.jetbrains.kotlin.gradle.plugin.*
 import java.io.*
 import java.util.*
 import java.util.concurrent.*
+import org.jetbrains.kotlin.gradle.targets.js.*
+import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
 
 private const val EXTENSION_NAME = "atomicfu"
 private const val ORIGINAL_DIR_NAME = "originalClassesDir"
@@ -49,9 +51,33 @@ private fun Project.configureDependencies() {
             getAtomicfuDependencyNotation(Platform.JS, version)
         )
         dependencies.add(TEST_IMPLEMENTATION_CONFIGURATION, getAtomicfuDependencyNotation(Platform.JS, version))
+        addCompilerPluginDependency()
+    }
+    withPluginWhenEvaluatedDependencies("org.jetbrains.kotlin.js") { version ->
+        dependencies.add(
+            if (config.transformJs) COMPILE_ONLY_CONFIGURATION else IMPLEMENTATION_CONFIGURATION,
+            getAtomicfuDependencyNotation(Platform.JS, version)
+        )
+        dependencies.add(TEST_IMPLEMENTATION_CONFIGURATION, getAtomicfuDependencyNotation(Platform.JS, version))
+        addCompilerPluginDependency()
     }
     withPluginWhenEvaluatedDependencies("kotlin-multiplatform") { version ->
         configureMultiplatformPluginDependencies(version)
+    }
+}
+
+private fun Project.addCompilerPluginDependency() {
+    withKotlinTargets { target ->
+        if (target.isJsIrTarget() && config.transformJsIr) {
+            val compileOnlyConfigurationName = project.extensions.getByType(KotlinMultiplatformExtension::class.java).sourceSets
+                .getByName("jsMain")
+                .compileOnlyConfigurationName
+            val compileOnlyTestConfigurationName = project.extensions.getByType(KotlinMultiplatformExtension::class.java).sourceSets
+                .getByName("jsTest")
+                .compileOnlyConfigurationName
+            dependencies.add(compileOnlyConfigurationName, "org.jetbrains.kotlin:atomicfu:1.6.255-SNAPSHOT")
+            dependencies.add(compileOnlyTestConfigurationName, "org.jetbrains.kotlin:atomicfu:1.6.255-SNAPSHOT")
+        }
     }
 }
 
@@ -114,6 +140,8 @@ private val Project.config: AtomicFUPluginExtension
 private fun getAtomicfuDependencyNotation(platform: Platform, version: String): String =
     "org.jetbrains.kotlinx:atomicfu${platform.suffix}:$version"
 
+private fun KotlinTarget.isJsIrTarget() = (this is KotlinJsTarget && this.irTarget != null) || this is KotlinJsIrTarget
+
 // Note "afterEvaluate" does nothing when the project is already in executed state, so we need
 // a special check for this case
 fun <T> Project.whenEvaluated(fn: Project.() -> T) {
@@ -138,9 +166,9 @@ fun Project.withKotlinTargets(fn: (KotlinTarget) -> Unit) {
     extensions.findByType(KotlinProjectExtension::class.java)?.let { kotlinExtension ->
         val targetsExtension = (kotlinExtension as? ExtensionAware)?.extensions?.findByName("targets")
         @Suppress("UNCHECKED_CAST")
-        val targets = targetsExtension as NamedDomainObjectContainer<KotlinTarget>
+        val targets = targetsExtension as? NamedDomainObjectContainer<KotlinTarget>
         // find all compilations given sourceSet belongs to
-        targets.all { target -> fn(target) }
+        targets?.all { target -> fn(target) }
     }
 }
 
@@ -182,7 +210,7 @@ fun Project.configureMultiplatformPluginTasks() {
                     )
                 }
                 KotlinPlatformType.js -> {
-                    if (!config.transformJs) return@compilations // skip when transformation is turned off
+                    if ((target.isJsIrTarget() && config.transformJsIr) || !config.transformJs) return@compilations
                     project.createJsTransformTask(compilation).configureJsTask(
                         compilation.compileAllTaskName,
                         transformedClassesDir,
@@ -235,6 +263,7 @@ fun Project.sourceSetsByCompilation(): Map<KotlinSourceSet, List<KotlinCompilati
 
 fun Project.configureMultiplatformPluginDependencies(version: String) {
     if (rootProject.findProperty("kotlin.mpp.enableGranularSourceSetsMetadata").toString().toBoolean()) {
+        addCompilerPluginDependency()
         val mainConfigurationName = project.extensions.getByType(KotlinMultiplatformExtension::class.java).sourceSets
                 .getByName(KotlinSourceSet.COMMON_MAIN_SOURCE_SET_NAME)
                 .compileOnlyConfigurationName
@@ -258,6 +287,7 @@ fun Project.configureMultiplatformPluginDependencies(version: String) {
         }
     } else {
         sourceSetsByCompilation().forEach { (sourceSet, compilations) ->
+            addCompilerPluginDependency()
             val platformTypes = compilations.map { it.platformType }.toSet()
             val compilationNames = compilations.map { it.compilationName }.toSet()
             if (compilationNames.size != 1)
@@ -395,6 +425,7 @@ class AtomicFUPluginExtension(pluginVersion: String?) {
     var dependenciesVersion = pluginVersion
     var transformJvm = true
     var transformJs = true
+    var transformJsIr = true // apply atomicfu compiler plugin for JS IR targets
     var variant: String = "FU"
     var verbose: Boolean = false
 }
