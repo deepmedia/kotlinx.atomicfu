@@ -25,7 +25,7 @@ dependencies {
     compile 'org.jetbrains.kotlin:kotlin-stdlib'
 
     compileOnly "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    implementation "org.jetbrains.kotlin:atomicfu:1.6.255-SNAPSHOT"
+    implementation "org.jetbrains.kotlin:atomicfu:1.6.20-dev-3459"
 
     testCompile gradleTestKit()
     testCompile 'org.jetbrains.kotlin:kotlin-test'

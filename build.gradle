@@ -30,7 +30,6 @@ buildscript {
     ext.native_targets_enabled = rootProject.properties['disable_native_targets'] == null
 
     repositories {
-        mavenLocal()
         jcenter()
         maven { url "https://plugins.gradle.org/m2/" }
         // Future replacement for kotlin-dev, with cache redirector
@@ -57,7 +56,6 @@ allprojects {
 
     println "Using Kotlin $kotlin_version for project $it"
     repositories {
-        mavenLocal()
         jcenter()
         // Future replacement for kotlin-dev, with cache redirector
         maven { url "https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev" }

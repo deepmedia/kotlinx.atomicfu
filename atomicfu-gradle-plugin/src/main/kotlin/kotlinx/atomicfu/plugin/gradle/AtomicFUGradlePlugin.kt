@@ -75,8 +75,8 @@ private fun Project.addCompilerPluginDependency() {
             val compileOnlyTestConfigurationName = project.extensions.getByType(KotlinMultiplatformExtension::class.java).sourceSets
                 .getByName("jsTest")
                 .compileOnlyConfigurationName
-            dependencies.add(compileOnlyConfigurationName, "org.jetbrains.kotlin:atomicfu:1.6.255-SNAPSHOT")
-            dependencies.add(compileOnlyTestConfigurationName, "org.jetbrains.kotlin:atomicfu:1.6.255-SNAPSHOT")
+            dependencies.add(compileOnlyConfigurationName, "org.jetbrains.kotlin:atomicfu:1.6.20-dev-3459")
+            dependencies.add(compileOnlyTestConfigurationName, "org.jetbrains.kotlin:atomicfu:1.6.20-dev-3459")
         }
     }
 }
