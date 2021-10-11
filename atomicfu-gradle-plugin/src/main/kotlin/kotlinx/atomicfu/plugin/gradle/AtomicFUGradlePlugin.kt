@@ -301,6 +301,7 @@ fun Project.configureMultiplatformPluginDependencies(version: String) {
                             KotlinPlatformType.jvm, KotlinPlatformType.androidJvm -> Platform.JVM
                             KotlinPlatformType.js -> Platform.JS
                             KotlinPlatformType.native -> Platform.NATIVE
+                            else -> error("Unsupported transformation platform '${platformTypes.single()}'")
                         }
             val configurationName = when {
                 // impl dependency for native (there is no transformation)
