@@ -78,7 +78,7 @@ if (rootProject.ext.native_targets_enabled) {
             if (project.ext.ideaActive) {
                 addNative(fromPreset(project.ext.ideaPreset, 'native'))
             } else {
-                addTarget(presets.linuxX64)
+                /* addTarget(presets.linuxX64)
                 addTarget(presets.iosArm64)
                 addTarget(presets.iosArm32)
                 addTarget(presets.iosX64)
@@ -94,7 +94,7 @@ if (rootProject.ext.native_targets_enabled) {
                 addTarget(presets.iosSimulatorArm64)
                 addTarget(presets.watchosSimulatorArm64)
                 addTarget(presets.tvosSimulatorArm64)
-                addTarget(presets.macosArm64)
+                addTarget(presets.macosArm64) */
             }
         }
 

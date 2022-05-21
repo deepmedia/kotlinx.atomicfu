@@ -65,6 +65,14 @@ fun configureMavenPublication(rh: RepositoryHandler, project: Project) {
             password = project.getSensitiveProperty("libs.sonatype.password")
         }
     }
+    rh.maven {
+        name = "github"
+        url = project.uri("https://maven.pkg.github.com/deepmedia/deepmedia-kotlinx")
+        credentials {
+            username = project.getSensitiveProperty("github.user")
+            password = project.getSensitiveProperty("github.pat")
+        }
+    }
 }
 
 fun signPublicationIfKeyPresent(project: Project, publication: MavenPublication) {
